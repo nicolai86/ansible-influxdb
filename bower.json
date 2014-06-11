@@ -1,0 +1,12 @@
+{
+  "name": "influxdb installation",
+  "version": "0.2.0",
+  "homepage": "https://github.com/nicolai86/ansible-influxdb",
+  "authors": [
+    "Benjamin Curtis",
+    "Raphael Randschau"
+  ],
+  "description": "install influxdb on your server",
+  "license": "MIT",
+  "dependencies": []
+}
