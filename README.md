@@ -21,5 +21,5 @@ MIT
 Author Information
 ------------------
 
-Benjamin Curtis <benjamin.curtis@gmail.com>
-Raphael Randschau <nicolai86@me.com>
+- Benjamin Curtis <benjamin.curtis@gmail.com>
+- Raphael Randschau <nicolai86@me.com>

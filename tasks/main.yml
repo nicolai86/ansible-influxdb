@@ -7,6 +7,8 @@
   command: dpkg --skip-same-version -i /usr/local/src/influxdb_{{ influxdb_version }}_amd64.deb
   register: dpkg_result
   changed_when: "dpkg_result.stdout.startswith('Selecting')"
+  notify:
+    - restart influxdb
 
 - name: change influxdb config.toml
   lineinfile:
