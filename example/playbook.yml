@@ -1,0 +1,8 @@
+- hosts: vm
+  remote_user: vagrant
+  sudo: true
+  gather_facts: yes
+
+  roles:
+    -
+      role: ansible-influxdb
