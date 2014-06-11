@@ -1,4 +1,3 @@
-influxdb:
-  version: latest
-  seed_servers: [ ]
-  replication_factor: 1
+influxdb_version:  latest
+influxdb_seed_servers: [ ]
+influxdb_replication_factor: 1

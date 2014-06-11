@@ -1,18 +1,32 @@
 - name: fetch package
   get_url:
-    url: "http://s3.amazonaws.com/influxdb/influxdb_{{ influxdb.version }}_amd64.deb"
-    dest: "/usr/local/src/influxdb_{{ influxdb.version }}_amd64.deb"
+    url: "http://s3.amazonaws.com/influxdb/influxdb_{{ influxdb_version }}_amd64.deb"
+    dest: "/usr/local/src/influxdb_{{ influxdb_version }}_amd64.deb"
 
 - name: install package
-  command: dpkg --skip-same-version -i /usr/local/src/influxdb_{{ influxdb.version }}_amd64.deb
+  command: dpkg --skip-same-version -i /usr/local/src/influxdb_{{ influxdb_version }}_amd64.deb
   register: dpkg_result
   changed_when: "dpkg_result.stdout.startswith('Selecting')"
 
-- name: set hostname to the ip4v
+- name: change influxdb config.toml
   lineinfile:
     dest: /opt/influxdb/shared/config.toml
-    regexp: "hostname ="
-    line: "hostname = \"{{ ansible_default_ipv4.address }}\""
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
     state: present
+  when: item.when
+  with_items:
+    -
+      regexp: "hostname ="
+      line: "hostname = \"{{ ansible_default_ipv4.address }}\""
+      when: yes
+    -
+      regexp: "seed-servers ="
+      line: seed-servers = ["{{ influxdb_seed_servers|join('", "') }}"]
+      when: influxdb_seed_servers is defined and influxdb_seed_servers != []
+    -
+      regexp: "replication-factor = "
+      line: "replication-factor = {{ influxdb_replication_factor }}"
+      when: yes
   notify:
     - restart influxdb
