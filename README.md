@@ -14,14 +14,6 @@ Role Variables
 | influxdb.seed_servers       | []            | List of host:port to use as cluster seed servers                 |
 | influxdb.replication_factor | 1             | How many servers in the cluster should have a copy of each shard |
 
-
-Example Playbook
--------------------------
-
-    - hosts: servers
-      roles:
-         - { role: stympy.ansible }
-
 License
 -------
 
