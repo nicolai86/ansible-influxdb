@@ -14,6 +14,11 @@ Role Variables
 | influxdb_seed_servers       | []            | List of host:port to use as cluster seed servers                 |
 | influxdb_replication_factor | 1             | How many servers in the cluster should have a copy of each shard |
 
+Example usage
+-------------
+
+The examples folder contains an example vagrant setup which installs & configures influxdb
+
 License
 -------
 
