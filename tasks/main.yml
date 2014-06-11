@@ -28,5 +28,9 @@
       regexp: "replication-factor = "
       line: "replication-factor = {{ influxdb_replication_factor }}"
       when: yes
+    -
+      regexp: "reporting-disabled = "
+      line: "reporting-disabled = {{ influxdb_reporting_disabled }}"
+      when: yes
   notify:
     - restart influxdb

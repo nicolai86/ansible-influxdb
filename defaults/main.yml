@@ -1,3 +1,10 @@
-influxdb_version:  latest
+# version of influxdb to download and install.
+# see http://influxdb.com/download/ for a list of available versions
+influxdb_version: latest
+
 influxdb_seed_servers: [ ]
+
 influxdb_replication_factor: 1
+
+# disable 24h reporting to m.influxdb.org
+influxdb_reporting_disabled: yes
