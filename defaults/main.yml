@@ -1,4 +1,4 @@
 influxdb:
-  version: 0.5.4
+  version: latest
   seed_servers: [ ]
   replication_factor: 1
