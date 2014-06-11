@@ -6,13 +6,7 @@ Install [InfluxDB](http://influxdb.org/) time series database
 Role Variables
 --------------
 
-`defaults/main.yml`
-
-| Name                        | Default Value | Description                                                      |
-|-----------------------------|---------------|------------------------------------------------------------------|
-| influxdb_version            | latest        | Version to install                                               |
-| influxdb_seed_servers       | []            | List of host:port to use as cluster seed servers                 |
-| influxdb_replication_factor | 1             | How many servers in the cluster should have a copy of each shard |
+See [defaults/main.yml](blob/master/defaults/main.yml) for a list of available default values
 
 Example usage
 -------------
