@@ -2,7 +2,12 @@
   remote_user: vagrant
   sudo: true
   gather_facts: yes
+  vars:
+    influxdb_databases:
+      - example_a
+      - example_b
 
   roles:
-    -
-      role: ansible-influxdb
+    - ansible-influxdb
+    - manage-influxdb
+

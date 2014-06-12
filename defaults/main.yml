@@ -8,3 +8,10 @@ influxdb_replication_factor: 1
 
 # disable 24h reporting to m.influxdb.org
 influxdb_reporting_disabled: yes
+
+# http credentials for the influxdb cluster
+influxdb_cluster_admin_name: "root"
+influxdb_cluster_admin_password: "root"
+
+# databases to create via http api
+influxdb_databases: []

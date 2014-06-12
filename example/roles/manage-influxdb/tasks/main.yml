@@ -1,0 +1,14 @@
+---
+- service:
+    name: influxdb
+    state: started
+
+- influxdb:
+    host: 127.0.0.1:8086
+    admin_username: root
+    admin_password: root
+    cluster_admins:
+      - { name: root, password: root }
+  register: manage
+
+- debug: var=manage

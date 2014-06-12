@@ -16,7 +16,7 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: present
-  when: item.when
+  when: "{{ item.when }}"
   with_items:
     -
       regexp: "hostname ="
@@ -25,14 +25,22 @@
     -
       regexp: "seed-servers ="
       line: seed-servers = ["{{ influxdb_seed_servers|join('", "') }}"]
-      when: influxdb_seed_servers is defined and influxdb_seed_servers != []
+      when: influxdb_seed_servers != []
+    -
+      regexp: "seed-servers ="
+      line: "seed-servers = []"
+      when: influxdb_seed_servers == []
     -
       regexp: "replication-factor = "
       line: "replication-factor = {{ influxdb_replication_factor }}"
       when: yes
     -
       regexp: "reporting-disabled = "
-      line: "reporting-disabled = {{ influxdb_reporting_disabled }}"
+      line: "reporting-disabled = {{ influxdb_reporting_disabled|bool|to_json }}"
+      when: yes
+    -
+      regexp: "reporting-disabled = "
+      line: "reporting-disabled = {{ influxdb_reporting_disabled|bool|to_json }}"
       when: yes
   notify:
     - restart influxdb
