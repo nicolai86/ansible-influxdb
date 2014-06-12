@@ -1,0 +1,119 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# (c) 2014, Raphael Randschau <nicolai86@me.com>
+
+DOCUMENTATION = '''
+---
+module: influxdb
+short_description: manage influxdb clusters
+version_added: "0.1"
+author: Raphael Randschau
+options:
+'''
+
+EXAMPLES = '''
+'''
+
+import re
+import os
+import sys
+import urllib2
+
+class InfluxDBUserModule(object):
+    module = None
+    def __init__(self, module):
+        self.module = module
+
+    def host(self):
+      return self.module.params.get('host')
+
+    def admin_username(self):
+      return self.module.params.get('admin_username')
+
+    def admin_password(self):
+      return self.module.params.get('admin_password')
+
+    def perform(self, uri, method, data=''):
+        opener = urllib2.build_opener(urllib2.HTTPHandler)
+        request = urllib2.Request(uri, data=data)
+        request.add_header('Content-Type', 'your/contenttype')
+        request.get_method = lambda: method
+        data = opener.open(request, data)
+        try:
+            return json.load(data), None
+        except Exception, e:
+            return 'json error: %s - %s' % (e, uri), e
+
+    def list_cluster_admins(self):
+        """fetch all cluster admins from influxdb"""
+        try:
+            url = 'http://%s/cluster_admins?u=%s&p=%s' % (self.host(), self.admin_username(), self.admin_password())
+            return self.perform(url, 'GET'), None
+        except Exception, e:
+            return None, e
+
+    def delete_cluster_admin(self, name):
+        url = 'http://%s/cluster_admins/%s?u=%s&p=%s' % (self.host(), name, self.admin_username(), self.admin_password())
+
+        json, error = self.perform(url, 'DELETE')
+        return error == None
+
+    def add_cluster_admin(self, admin_data):
+        url = 'http://%s/cluster_admins?u=%s&p=%s' % (self.host(), self.admin_username(), self.admin_password())
+
+        json, error = self.perform(url, 'POST', json.dumps(admin_data))
+        return error == None
+
+    def manage_cluster_admins(self):
+        """creates or deletes influxdb cluster admins"""
+        existing_admins, error = self.list_cluster_admins()
+        if error != None:
+            return { 'rc': 1, 'changed': False, 'stderr': ('unable to fetch cluster admins. %s' % (error)) }
+
+        changed = False
+
+        all_admins = self.module.params.get('cluster_admins')
+
+        admins_to_delete = set( map(lambda x: x['name'], existing_admins) ).difference( set( map(lambda x: x['name'], all_admins) ) )
+        for admin in admins_to_delete:
+            changed = True
+
+            self.delete_cluster_admin(admin)
+
+        for admin in all_admins:
+            missing = True
+            for existing in existing_admins:
+                missing = missing and existing['name'] != admin['name']
+            if not missing:
+                continue
+
+            changed = True
+            self.add_cluster_admin(admin)
+
+        return { 'changed': changed, 'rc': 0, 'stdout': '', 'stderr': '' }
+
+def main():
+    module = AnsibleModule(
+        argument_spec = dict(
+            host             = dict(required=True,  type='str'),
+            admin_username   = dict(required=True,  type='str'),
+            admin_password   = dict(required=True,  type='str'),
+            cluster_admins   = dict(required=False, type='list'),
+        ),
+        supports_check_mode = False,
+        mutually_exclusive = [ ],
+    )
+
+    influxdb = InfluxDBUserModule(module)
+
+    if module.params.get('cluster_admins', None):
+        module.exit_json(**influxdb.manage_cluster_admins())
+    else:
+        result = {}
+        module.exit_json(**result)
+
+# import module snippets
+from ansible.module_utils.basic import *
+
+main()

@@ -1,0 +1,119 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# (c) 2014, Raphael Randschau <nicolai86@me.com>
+
+DOCUMENTATION = '''
+---
+module: influxdb
+short_description: manage influxdb clusters
+version_added: "0.1"
+author: Raphael Randschau
+options:
+'''
+
+EXAMPLES = '''
+'''
+
+import re
+import os
+import sys
+import urllib2
+
+class InfluxDBDatabaseModule(object):
+    module = None
+    def __init__(self, module):
+        self.module = module
+
+    def host(self):
+      return self.module.params.get('host')
+
+    def admin_username(self):
+      return self.module.params.get('admin_username')
+
+    def admin_password(self):
+      return self.module.params.get('admin_password')
+
+    def perform(self, uri, method, data=''):
+        opener = urllib2.build_opener(urllib2.HTTPHandler)
+        request = urllib2.Request(uri, data=data)
+        request.add_header('Content-Type', 'your/contenttype')
+        request.get_method = lambda: method
+        data = opener.open(request, data)
+        try:
+            return json.load(data), None
+        except Exception, e:
+            return 'json error: %s - %s' % (e, uri), e
+
+    def list_databases(self):
+        """fetch all databases from influxdb"""
+        try:
+            url = 'http://%s/db?u=%s&p=%s' % (self.host(), self.admin_username(), self.admin_password())
+            return self.perform(url, 'GET'), None
+        except Exception, e:
+            return None, e
+
+    def add_database(self, name):
+        url = 'http://%s/db?u=%s&p=%s' % (self.host(), self.admin_username(), self.admin_password())
+
+        json, error = self.perform(url, 'POST', json.dumps({'name': name}))
+        return error == None
+
+    def delete_database(self, name):
+        url = 'http://%s/db/%s?u=%s&p=%s' % (self.host(), name, self.admin_username(), self.admin_password())
+
+        json, error = self.perform(url, 'DELETE')
+        return error == None
+
+    def manage_databases(self):
+        """creates or deletes influxdb databases"""
+        existing_databases, error = self.list_databases()
+        if error != None:
+            return { 'rc': 1, 'changed': False, 'stderr': ('unable to fetch databases. %s' % (error)) }
+
+        changed = False
+
+        all_databases = self.module.params.get('databases')
+
+        databases_to_delete = set( map(lambda x: x['name'], existing_databases) ).difference( set( all_databases ) )
+        for database in databases_to_delete:
+            changed = True
+
+            self.delete_database(database)
+
+        for database in all_databases:
+            missing = True
+            for existing in existing_admins:
+                missing = missing and existing['name'] != database
+            if not missing:
+                continue
+
+            changed = True
+            self.add_database(database)
+
+        return { 'changed': changed, 'rc': 0, 'stdout': '', 'stderr': '' }
+
+def main():
+    module = AnsibleModule(
+        argument_spec = dict(
+            host             = dict(required=True,  type='str'),
+            admin_username   = dict(required=True,  type='str'),
+            admin_password   = dict(required=True,  type='str'),
+            databases        = dict(required=False, type='list'),
+        ),
+        supports_check_mode = False,
+        mutually_exclusive = [ ['cluster_admins', 'databases'] ],
+    )
+
+    influxdb = InfluxDBDatabaseModule(module)
+
+    if module.params.get('databases', None):
+        module.exit_json(**influxdb.manage_databases())
+    else:
+        result = {}
+        module.exit_json(**result)
+
+# import module snippets
+from ansible.module_utils.basic import *
+
+main()

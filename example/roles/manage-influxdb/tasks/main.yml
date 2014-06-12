@@ -3,12 +3,18 @@
     name: influxdb
     state: started
 
-- influxdb:
+- influxdb_users:
     host: 127.0.0.1:8086
     admin_username: root
     admin_password: root
     cluster_admins:
       - { name: root, password: root }
-  register: manage
+      - { name: max, password: mustermann }
 
-- debug: var=manage
+- influxdb_databases:
+    host: 127.0.0.1:8086
+    admin_username: root
+    admin_password: root
+    databases:
+      - example_a
+      - example_b
