@@ -1,0 +1,125 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# (c) 2014, Raphael Randschau <nicolai86@me.com>
+
+DOCUMENTATION = '''
+---
+module: influxdb
+short_description: manage influxdb clusters
+version_added: "0.1"
+author: Raphael Randschau
+options:
+'''
+
+EXAMPLES = '''
+'''
+
+import re
+import os
+import sys
+import urllib2
+
+class InfluxDBUserModule(object):
+    params = None
+    def __init__(self, params):
+        self.params = params
+
+    def host(self):
+        return self.params.get('host')
+
+    def build_request(self, url, method, data = ''):
+        authorized_url = '%s?u=%s&p=%s' % (url, self.params.get('api_username'), self.params.get('api_password'))
+        request = urllib2.Request(authorized_url, data=data)
+        request.add_header('Content-Type', 'application/json')
+        request.get_method = lambda: method
+        return request
+
+    def perform(self, url, method, data=''):
+        opener = urllib2.build_opener(urllib2.HTTPHandler)
+
+        request = self.build_request(url, method, data)
+        data = opener.open(request, data)
+
+        try:
+            return (json.load(data), None)
+        except Exception, e:
+            return ('json error: %s - %s' % (e, url), e)
+
+    def list_cluster_admins(self):
+        try:
+            url = 'http://%s/cluster_admins' % (self.host())
+            data, error = self.perform(url, 'GET')
+            return (data, error)
+        except Exception, e:
+            return (None, e)
+
+    def cluster_admin_exists(self):
+        (admins, error) = self.list_cluster_admins()
+        if error != None:
+            return (None, error)
+
+        exists = False
+        for admin in admins:
+            exists = exists or (admin['name'] == self.params.get('username'))
+
+        return (exists, None)
+
+    def add_cluster_admin(self):
+        (exists, error) = self.cluster_admin_exists()
+        if error != None:
+            return { 'changed': False, rc: 1, 'stderr': '%s' % (error) }
+
+        if exists:
+            return { 'changed': False, 'rc': 0 }
+
+        try:
+            url = 'http://%s/cluster_admins' % (self.host())
+            self.perform(url, 'POST', json.dumps({ 'name': self.params.get('username'), 'password': self.params.get('password') }))
+            return { 'changed': True, 'rc': 0 }
+        except Exception, e:
+            return { 'changed': False, 'rc': 1, 'stdout': '', 'stderr': '%s' % (e) }
+
+
+    def delete_cluster_admin(self):
+        (exists, error) = self.cluster_admin_exists()
+        if error != None:
+            return { 'changed': False, rc: 1, 'stderr': '%s' % (error) }
+
+        if not exists:
+            return { 'changed': False, 'rc': 0 }
+
+        try:
+            url = 'http://%s/cluster_admins/%s' % (self.host(), self.params.get('username'))
+            self.perform(url, 'DELETE')
+            return { 'changed': True, 'rc': 0 }
+        except Exception, e:
+            return { 'changed': False, 'rc': 1, 'stdout': '', 'stderr': '%s' % (e) }
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec = dict(
+            host             = dict(required=True,  type='str'),
+            api_username     = dict(required=True,  type='str'),
+            api_password     = dict(required=True,  type='str'),
+            username         = dict(required=True,  type='str'),
+            password         = dict(required=True,  type='str'),
+            state            = dict(required=False, type='str'),
+        ),
+        supports_check_mode = False,
+        mutually_exclusive = [ ],
+    )
+
+    influxdb = InfluxDBUserModule(module.params)
+
+    state = module.params.get('state', 'present')
+    if state == 'present':
+        module.exit_json(**influxdb.add_cluster_admin())
+    else:
+        module.exit_json(**influxdb.delete_cluster_admin())
+
+# import module snippets
+from ansible.module_utils.basic import *
+
+main()
