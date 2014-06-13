@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: influxdb
-short_description: manage influxdb clusters
+short_description: manage influxdb clusters users
 version_added: "0.1"
 author: Raphael Randschau
 options:
