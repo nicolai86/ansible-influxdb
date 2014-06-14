@@ -33,7 +33,9 @@
     username: "{{ item.name }}"
     password: "{{ item.password }}"
     database: example
-    database_admin: yes
+    admin: yes
+    write_to: "^$"
+    read_from: ".*"
     state: "{{ item.state }}"
   with_items:
     - { name: max, password: mustermann, state: present }
