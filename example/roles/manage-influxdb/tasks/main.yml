@@ -3,7 +3,8 @@
     name: influxdb
     state: started
 
-- influxdb_user:
+- name: manage influxdb cluster admins
+  influxdb_user:
     host: 127.0.0.1:8086
     api_username: root
     api_password: root
@@ -12,6 +13,29 @@
     state: "{{ item.state }}"
   with_items:
     - { name: root, password: root, state: present }
+    - { name: maxi, password: mustermann, state: present }
+    - { name: maxi, password: mustermann, state: absent }
+
+- influxdb_database:
+    host: 127.0.0.1:8086
+    api_username: root
+    api_password: root
+    database: "{{ item.name }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { name: example, state: present }
+
+- name: manage influxdb database users
+  influxdb_user:
+    host: 127.0.0.1:8086
+    api_username: root
+    api_password: root
+    username: "{{ item.name }}"
+    password: "{{ item.password }}"
+    database: example
+    database_admin: yes
+    state: "{{ item.state }}"
+  with_items:
     - { name: max, password: mustermann, state: present }
     - { name: max, password: mustermann, state: absent }
 
@@ -22,5 +46,4 @@
     database: "{{ item.name }}"
     state: "{{ item.state }}"
   with_items:
-    - { name: example_a, state: present }
-    - { name: example_a, state: absent }
+    - { name: example, state: absent }

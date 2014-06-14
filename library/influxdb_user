@@ -46,27 +46,32 @@ class InfluxDBUserModule(object):
         except Exception, e:
             return ('json error: %s - %s' % (e, url), e)
 
-    def list_cluster_admins(self):
+    def list_users(self):
         try:
             url = 'http://%s/cluster_admins' % (self.host())
+
+            database = self.params.get('database', None)
+            if database != None:
+                url = 'http://%s/db/%s/users' % (self.host(), database)
+
             data, error = self.perform(url, 'GET')
             return (data, error)
         except Exception, e:
             return (None, e)
 
-    def cluster_admin_exists(self):
-        (admins, error) = self.list_cluster_admins()
+    def user_exists(self):
+        (users, error) = self.list_users()
         if error != None:
             return (None, error)
 
         exists = False
-        for admin in admins:
-            exists = exists or (admin['name'] == self.params.get('username'))
+        for user in users:
+            exists = exists or (user['name'] == self.params.get('username'))
 
         return (exists, None)
 
-    def add_cluster_admin(self):
-        (exists, error) = self.cluster_admin_exists()
+    def add_user(self):
+        (exists, error) = self.user_exists()
         if error != None:
             return { 'changed': False, rc: 1, 'stderr': '%s' % (error) }
 
@@ -75,14 +80,25 @@ class InfluxDBUserModule(object):
 
         try:
             url = 'http://%s/cluster_admins' % (self.host())
-            self.perform(url, 'POST', json.dumps({ 'name': self.params.get('username'), 'password': self.params.get('password') }))
+            payload = {
+                'name': self.params.get('username'),
+                'password': self.params.get('password')
+            }
+
+            database = self.params.get('database', None)
+            if database != None:
+                url = 'http://%s/db/%s/users' % (self.host(), database)
+
+                payload['isAdmin'] = self.params.get('database_admin', False)
+
+            self.perform(url, 'POST', json.dumps(payload))
             return { 'changed': True, 'rc': 0 }
         except Exception, e:
             return { 'changed': False, 'rc': 1, 'stdout': '', 'stderr': '%s' % (e) }
 
 
-    def delete_cluster_admin(self):
-        (exists, error) = self.cluster_admin_exists()
+    def delete_user(self):
+        (exists, error) = self.user_exists()
         if error != None:
             return { 'changed': False, rc: 1, 'stderr': '%s' % (error) }
 
@@ -91,6 +107,11 @@ class InfluxDBUserModule(object):
 
         try:
             url = 'http://%s/cluster_admins/%s' % (self.host(), self.params.get('username'))
+
+            database = self.params.get('database', None)
+            if database != None:
+                url = 'http://%s/db/%s/users/%s' % (self.host(), database, self.params.get('username'))
+
             self.perform(url, 'DELETE')
             return { 'changed': True, 'rc': 0 }
         except Exception, e:
@@ -105,6 +126,8 @@ def main():
             api_password     = dict(required=True,  type='str'),
             username         = dict(required=True,  type='str'),
             password         = dict(required=True,  type='str'),
+            database         = dict(required=False, type='str'),
+            database_admin   = dict(required=False, type='bool'),
             state            = dict(required=False, type='str'),
         ),
         supports_check_mode = False,
@@ -113,11 +136,40 @@ def main():
 
     influxdb = InfluxDBUserModule(module.params)
 
+    # TODO add support to update admin password
+    # curl -X POST 'http://localhost:8086/cluster_admins/paul?u=root&p=root' -d '{"password": "new pass"}'
+
+    # TODO per-database user
+
+    # # update user's password
+    # curl -X POST 'http://localhost:8086/db/site_dev/users/paul?u=root&p=root' \
+    #   -d '{"password": "new pass"}'
+
+    # # add database admin privilege
+    # curl -X POST 'http://localhost:8086/db/site_dev/users/paul?u=root&p=root' \
+    #   -d '{"admin": true}'
+
+    # # remove database admin privilege
+    # curl -X POST 'http://localhost:8086/db/site_dev/users/paul?u=root&p=root' \
+    #   -d '{"admin": false}'
+
+    # TODO read/ write access
+    # {
+    #   "name": "paul",
+    #   "readFrom": ".*",
+    #   "writeTo": ".*"
+    # }
+
+    # {
+    #   "readFrom": "^$",
+    #   "writeTo": ".*"
+    # }
+
     state = module.params.get('state', 'present')
     if state == 'present':
-        module.exit_json(**influxdb.add_cluster_admin())
+        module.exit_json(**influxdb.add_user())
     else:
-        module.exit_json(**influxdb.delete_cluster_admin())
+        module.exit_json(**influxdb.delete_user())
 
 # import module snippets
 from ansible.module_utils.basic import *
