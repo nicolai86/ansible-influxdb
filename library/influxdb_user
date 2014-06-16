@@ -80,7 +80,7 @@ class InfluxDBUserModule(object):
     def add_user(self):
         (exists, error) = self.user_exists()
         if error != None:
-            return { 'changed': False, rc: 1, 'stderr': '%s' % (error) }
+            return { 'changed': False, 'rc': 1, 'stderr': '%s' % (error) }
 
         database = self.params.get('database', None)
         password = self.params.get('password', None)
