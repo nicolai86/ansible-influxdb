@@ -26,7 +26,7 @@ class InfluxDBDatabaseModule(object):
         self.params = params
 
     def host(self):
-      return self.params.get('host')
+      return self.params.get('host', '127.0.0.1:8086')
 
     def build_request(self, url, method, data = ''):
         authorized_url = '%s?u=%s&p=%s' % (url, self.params.get('api_username'), self.params.get('api_password'))
@@ -99,7 +99,7 @@ class InfluxDBDatabaseModule(object):
 def main():
     module = AnsibleModule(
         argument_spec = dict(
-            host             = dict(required=True,  type='str'),
+            host             = dict(required=False, type='str'),
             api_username     = dict(required=True,  type='str'),
             api_password     = dict(required=True,  type='str'),
             database         = dict(required=True,  type='str'),
