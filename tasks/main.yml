@@ -16,7 +16,7 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: present
-  when: "{{ item.when }}"
+  when: item.when
   with_items:
     -
       regexp: "hostname ="
