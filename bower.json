@@ -1,6 +1,6 @@
 {
   "name": "influxdb installation",
-  "version": "0.2.0",
+  "version": "0.3.4",
   "homepage": "https://github.com/nicolai86/ansible-influxdb",
   "authors": [
     "Benjamin Curtis",
