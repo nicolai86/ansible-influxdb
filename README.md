@@ -1,7 +1,12 @@
 InfluxDB
 ========
 
-Install [InfluxDB](http://influxdb.org/) time series database
+Install [InfluxDB](http://influxdb.org/) time series database. Add library methods to manage databases/ users:
+
+```
+- influxdb_database
+- influxdb_user
+```
 
 Role Variables
 --------------
