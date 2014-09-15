@@ -15,3 +15,5 @@ influxdb_cluster_admin_password: "root"
 
 # databases to create via http api
 influxdb_databases: []
+
+influxdb_bind_address: 127.0.0.1

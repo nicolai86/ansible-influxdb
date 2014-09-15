@@ -19,6 +19,10 @@
   when: item.when
   with_items:
     -
+      regexp: "bind-address ="
+      line: "bind-address = {{ influxdb_bind_address }}"
+      when: yes
+    -
       regexp: "hostname ="
       line: "hostname = \"{{ ansible_default_ipv4.address }}\""
       when: yes
