@@ -20,7 +20,7 @@
   with_items:
     -
       regexp: "bind-address ="
-      line: "bind-address = {{ influxdb_bind_address }}"
+      line: "bind-address = \"{{ influxdb_bind_address }}\""
       when: yes
     -
       regexp: "hostname ="
